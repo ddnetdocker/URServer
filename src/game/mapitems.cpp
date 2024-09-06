@@ -54,7 +54,9 @@ bool IsValidTeleTile(int Index)
 		Index == TILE_TELECHECK ||
 		Index == TILE_TELECHECKOUT ||
 		Index == TILE_TELECHECKIN ||
-		Index == TILE_TELECHECKINEVIL);
+		Index == TILE_TELECHECKINEVIL ||
+		Index == TILE_CHALLENGEQUEUE ||
+		Index == TILE_CHALLENGESTART);
 }
 
 bool IsTeleTileCheckpoint(int Index)

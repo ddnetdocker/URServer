@@ -112,6 +112,49 @@ void CGameControllerMod::HandleCharacterTiles(CCharacter *pChr, int MapIndex)
 		GameServer()->SendChatTarget(ClientId, "You are now out of the solo part");
 		pChr->SetSolo(false);
 	}
+
+	// Detect when a player hit CHALLENGEQUEUE tile
+	bool IsOnQueue = (TileIndex == TILE_CHALLENGEQUEUE) || (TileFIndex == TILE_CHALLENGEQUEUE) || FTile1 == TILE_CHALLENGEQUEUE || FTile2 == TILE_CHALLENGEQUEUE || FTile3 == TILE_CHALLENGEQUEUE || FTile4 == TILE_CHALLENGEQUEUE || Tile1 == TILE_CHALLENGEQUEUE || Tile2 == TILE_CHALLENGEQUEUE || Tile3 == TILE_CHALLENGEQUEUE || Tile4 == TILE_CHALLENGEQUEUE;
+	if(IsOnQueue)
+	{
+		dbg_msg("ChallengeQueue", "Player %d hit CHALLENGEQUEUE tile", ClientId);
+		if(pPlayer == nullptr)
+			return;
+
+		const int Team = GameServer()->GetDDRaceTeam(ClientId);
+		if(Teams().GetSaving(Team))
+		{
+			GameServer()->SendStartWarning(ClientId, "You can't start while loading/saving of team is in progress");
+			pChr->Die(ClientId, WEAPON_WORLD);
+			return;
+		}
+		if(g_Config.m_SvTeam == SV_TEAM_MANDATORY && (Team == TEAM_FLOCK || Teams().Count(Team) <= 1))
+		{
+			GameServer()->SendStartWarning(ClientId, "You have to be in a team with other tees to start");
+			pChr->Die(ClientId, WEAPON_WORLD);
+			return;
+		}
+		if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team > TEAM_FLOCK && Team < TEAM_SUPER && Teams().Count(Team) < g_Config.m_SvMinTeamSize && !Teams().TeamFlock(Team))
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "Your team has fewer than %d players, so your team rank won't count", g_Config.m_SvMinTeamSize);
+			GameServer()->SendStartWarning(ClientId, aBuf);
+		}
+		if(g_Config.m_SvResetPickups)
+		{
+			pChr->ResetPickups();
+		}
+
+		Teams().OnCharacterStart(ClientId);
+		pChr->m_LastTimeCp = -1;
+		pChr->m_LastTimeCpBroadcasted = -1;
+		for(float &CurrentTimeCp : pChr->m_aCurrentTimeCp)
+		{
+			CurrentTimeCp = 0.0f;
+		}
+
+		// Teleport all players from the same team to TODO
+	}
 }
 
 void CGameControllerMod::SetArmorProgress(CCharacter *pCharacer, int Progress)

@@ -127,6 +127,16 @@ void CCollision::Init(class CLayers *pLayers)
 			int Type = m_pTele[i].m_Type;
 			if(Number > 0)
 			{
+				if(Type == TILE_CHALLENGEQUEUE)
+				{
+					dbg_msg("collision", "challenge queue %d at (%d, %d)", Number, i % m_Width, i / m_Width);
+					m_ChallengeQueue[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
+				}
+				else if(Type == TILE_CHALLENGESTART)
+				{
+					m_ChallengeStart[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
+				}
+
 				if(Type == TILE_TELEIN)
 				{
 					m_TeleIns[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
@@ -657,6 +667,28 @@ int CCollision::IsTeleport(int Index) const
 	return 0;
 }
 
+int CCollision::IsChallengeQueue(int Index) const
+{
+	if(Index < 0 || !m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_CHALLENGEQUEUE)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsChallengeStart(int Index) const
+{
+	if(Index < 0 || !m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_CHALLENGESTART)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
 int CCollision::IsEvilTeleport(int Index) const
 {
 	if(Index < 0)
@@ -845,6 +877,8 @@ bool CCollision::TileExists(int Index) const
 	if(Index < 0)
 		return false;
 
+	if((m_pTiles[Index].m_Index >= TILE_CHALLENGEQUEUE && m_pTiles[Index].m_Index <= TILE_CHALLENGESTART))
+		return true;
 	if((m_pTiles[Index].m_Index >= TILE_FREEZE && m_pTiles[Index].m_Index <= TILE_TELE_LASER_DISABLE) || (m_pTiles[Index].m_Index >= TILE_LFREEZE && m_pTiles[Index].m_Index <= TILE_LUNFREEZE))
 		return true;
 	if(m_pFront && ((m_pFront[Index].m_Index >= TILE_FREEZE && m_pFront[Index].m_Index <= TILE_TELE_LASER_DISABLE) || (m_pFront[Index].m_Index >= TILE_LFREEZE && m_pFront[Index].m_Index <= TILE_LUNFREEZE)))

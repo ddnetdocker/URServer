@@ -87,6 +87,8 @@ public:
 	int GetTileFlags(int Index) const;
 	int GetFTileFlags(int Index) const;
 	int IsTeleport(int Index) const;
+	int IsChallengeQueue(int Index) const;
+	int IsChallengeStart(int Index) const;
 	int IsEvilTeleport(int Index) const;
 	bool IsCheckTeleport(int Index) const;
 	bool IsCheckEvilTeleport(int Index) const;
@@ -146,6 +148,8 @@ public:
 	const std::vector<vec2> &TeleOuts(int Number) { return m_TeleOuts[Number]; }
 	const std::vector<vec2> &TeleCheckOuts(int Number) { return m_TeleCheckOuts[Number]; }
 	const std::vector<vec2> &TeleOthers(int Number) { return m_TeleOthers[Number]; }
+	const std::vector<vec2> &ChallengeQueue(int Number) { return m_ChallengeQueue[Number]; }
+	const std::vector<vec2> &ChallengeStart(int Number) { return m_ChallengeStart[Number]; }
 
 private:
 	CLayers *m_pLayers;
@@ -169,6 +173,9 @@ private:
 	std::map<int, std::vector<vec2>> m_TeleCheckOuts;
 	// TILE_TELEINEVIL, TILE_TELECHECK, TILE_TELECHECKIN, TILE_TELECHECKINEVIL
 	std::map<int, std::vector<vec2>> m_TeleOthers;
+	// TILE_TILE_CHALLENGEQUEUE, TILE_CHALLENGESTART
+	std::map<int, std::vector<vec2>> m_ChallengeQueue;
+	std::map<int, std::vector<vec2>> m_ChallengeStart;
 };
 
 void ThroughOffset(vec2 Pos0, vec2 Pos1, int *pOffsetX, int *pOffsetY);
