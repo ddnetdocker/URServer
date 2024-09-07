@@ -4040,6 +4040,7 @@ void CGameContext::CreateAllEntities(bool Initial)
 			// Game layer
 			{
 				const int GameIndex = pTiles[Index].m_Index;
+
 				if(GameIndex == TILE_OLDLASER)
 				{
 					g_Config.m_SvOldLaser = 1;
@@ -4064,6 +4065,14 @@ void CGameContext::CreateAllEntities(bool Initial)
 				{
 					m_Tuning.Set("player_hooking", 0);
 					dbg_msg("game_layer", "found no player hooking tile");
+				}
+				else if(GameIndex == TILE_CHALLENGESTART){
+					const vec2 Pos(x * 32.0f + 16.0f, y * 32.0f + 16.0f);
+					m_pController->AddChallengeStart(Pos);
+				}
+				else if(GameIndex == TILE_CHALLENGEQUEUE ){
+					const vec2 Pos(x * 32.0f + 16.0f, y * 32.0f + 16.0f);
+					m_pController->AddChallengeQueue(Pos);
 				}
 				else if(GameIndex >= ENTITY_OFFSET)
 				{

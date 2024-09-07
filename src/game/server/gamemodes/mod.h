@@ -22,5 +22,7 @@ public:
 	void Tick() override;
 
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg = true) override;
+
+	void startChallenge(CCharacter *pChr);
 };
 #endif // GAME_SERVER_GAMEMODES_MOD_H

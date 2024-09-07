@@ -20,6 +20,8 @@ class IGameController
 	friend class CSaveTeam; // need access to GameServer() and Server()
 
 	std::vector<vec2> m_avSpawnPoints[3];
+	std::vector<vec2> m_avChallengeStart;
+	std::vector<vec2> m_avChallengeQueue;
 
 	class CGameContext *m_pGameServer;
 	class CConfig *m_pConfig;
@@ -149,6 +151,24 @@ public:
 	CClientMask GetMaskForPlayerWorldEvent(int Asker, int ExceptID = -1);
 
 	bool IsTeamPlay() { return m_GameFlags & GAMEFLAG_TEAMS; }
+	bool AddChallengeStart(vec2 Pos) { m_avChallengeStart.push_back(Pos); return true; }
+	vec2 GetChallengeStartPos() { 
+		if (m_avChallengeStart.size() == 0)
+			return vec2(100, 100);
+
+		int Random = rand() % m_avChallengeStart.size();
+		return m_avChallengeStart[Random];
+	}
+
+	bool AddChallengeQueue(vec2 Pos) { m_avChallengeQueue.push_back(Pos); return true; }
+	vec2 GetChallengeQueuePos() {
+		if (m_avChallengeQueue.size() == 0)
+			return vec2(100, 100);
+
+		int Random = rand() % m_avChallengeQueue.size();
+		return m_avChallengeQueue[Random];
+	}
+
 	// DDRace
 
 	float m_CurrentRecord;

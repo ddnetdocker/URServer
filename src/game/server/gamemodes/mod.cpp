@@ -20,7 +20,7 @@ CGameControllerMod::CGameControllerMod(class CGameContext *pGameServer) :
 {
 	m_pGameType = g_Config.m_SvTestingCommands ? TEST_TYPE_NAME : GAME_TYPE_NAME;
 
-	//m_GameFlags = GAMEFLAG_TEAMS; // GAMEFLAG_TEAMS makes it a two-team gamemode
+	// m_GameFlags = GAMEFLAG_TEAMS; // GAMEFLAG_TEAMS makes it a two-team gamemode
 }
 
 CGameControllerMod::~CGameControllerMod() = default;
@@ -38,7 +38,7 @@ void CGameControllerMod::HandleCharacterTiles(CCharacter *pChr, int MapIndex)
 	int TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
 	int TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
 
-	//Sensitivity
+	// Sensitivity
 	int S1 = GameServer()->Collision()->GetPureMapIndex(vec2(pChr->GetPos().x + pChr->GetProximityRadius() / 3.f, pChr->GetPos().y - pChr->GetProximityRadius() / 3.f));
 	int S2 = GameServer()->Collision()->GetPureMapIndex(vec2(pChr->GetPos().x + pChr->GetProximityRadius() / 3.f, pChr->GetPos().y + pChr->GetProximityRadius() / 3.f));
 	int S3 = GameServer()->Collision()->GetPureMapIndex(vec2(pChr->GetPos().x - pChr->GetProximityRadius() / 3.f, pChr->GetPos().y - pChr->GetProximityRadius() / 3.f));
@@ -117,43 +117,10 @@ void CGameControllerMod::HandleCharacterTiles(CCharacter *pChr, int MapIndex)
 	bool IsOnQueue = (TileIndex == TILE_CHALLENGEQUEUE) || (TileFIndex == TILE_CHALLENGEQUEUE) || FTile1 == TILE_CHALLENGEQUEUE || FTile2 == TILE_CHALLENGEQUEUE || FTile3 == TILE_CHALLENGEQUEUE || FTile4 == TILE_CHALLENGEQUEUE || Tile1 == TILE_CHALLENGEQUEUE || Tile2 == TILE_CHALLENGEQUEUE || Tile3 == TILE_CHALLENGEQUEUE || Tile4 == TILE_CHALLENGEQUEUE;
 	if(IsOnQueue)
 	{
-		dbg_msg("ChallengeQueue", "Player %d hit CHALLENGEQUEUE tile", ClientId);
-		if(pPlayer == nullptr)
-			return;
-
-		const int Team = GameServer()->GetDDRaceTeam(ClientId);
-		if(Teams().GetSaving(Team))
+		if(pChr->m_DDRaceState != DDRACE_STARTED)
 		{
-			GameServer()->SendStartWarning(ClientId, "You can't start while loading/saving of team is in progress");
-			pChr->Die(ClientId, WEAPON_WORLD);
-			return;
+			startChallenge(pChr);
 		}
-		if(g_Config.m_SvTeam == SV_TEAM_MANDATORY && (Team == TEAM_FLOCK || Teams().Count(Team) <= 1))
-		{
-			GameServer()->SendStartWarning(ClientId, "You have to be in a team with other tees to start");
-			pChr->Die(ClientId, WEAPON_WORLD);
-			return;
-		}
-		if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team > TEAM_FLOCK && Team < TEAM_SUPER && Teams().Count(Team) < g_Config.m_SvMinTeamSize && !Teams().TeamFlock(Team))
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "Your team has fewer than %d players, so your team rank won't count", g_Config.m_SvMinTeamSize);
-			GameServer()->SendStartWarning(ClientId, aBuf);
-		}
-		if(g_Config.m_SvResetPickups)
-		{
-			pChr->ResetPickups();
-		}
-
-		Teams().OnCharacterStart(ClientId);
-		pChr->m_LastTimeCp = -1;
-		pChr->m_LastTimeCpBroadcasted = -1;
-		for(float &CurrentTimeCp : pChr->m_aCurrentTimeCp)
-		{
-			CurrentTimeCp = 0.0f;
-		}
-
-		// Teleport all players from the same team to TODO
 	}
 }
 
@@ -237,4 +204,76 @@ void CGameControllerMod::DoTeamChange(class CPlayer *pPlayer, int Team, bool DoC
 	}
 
 	IGameController::DoTeamChange(pPlayer, Team, DoChatMsg);
+}
+
+void CGameControllerMod::startChallenge(CCharacter *pChr)
+{
+	CPlayer *pPlayer = pChr->GetPlayer();
+	const int ClientId = pPlayer->GetCid();
+
+	if(pPlayer == nullptr)
+		return;
+
+	const int Team = GameServer()->GetDDRaceTeam(ClientId);
+	if(Team == TEAM_FLOCK)
+	{
+		int newTeam = GameServer()->m_pController->Teams().GetFirstEmptyTeam();
+		if(newTeam == -1)
+		{
+			GameServer()->SendChatTarget(ClientId, "No team available to join");
+			pChr->Die(ClientId, WEAPON_WORLD);
+			return;
+		}
+		GameServer()->m_pController->Teams().SetForceCharacterTeam(ClientId, newTeam);
+		return;
+	}
+
+	if(Teams().GetSaving(Team))
+	{
+		GameServer()->SendStartWarning(ClientId, "You can't start while loading/saving of team is in progress");
+		pChr->Die(ClientId, WEAPON_WORLD);
+		return;
+	}
+	if(g_Config.m_SvTeam == SV_TEAM_MANDATORY && (Team == TEAM_FLOCK || Teams().Count(Team) <= 1))
+	{
+		GameServer()->SendStartWarning(ClientId, "You have to be in a team with other tees to start");
+		pChr->Die(ClientId, WEAPON_WORLD);
+		return;
+	}
+	if(g_Config.m_SvTeam != SV_TEAM_FORCED_SOLO && Team > TEAM_FLOCK && Team < TEAM_SUPER && Teams().Count(Team) < g_Config.m_SvMinTeamSize && !Teams().TeamFlock(Team))
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "Your team has fewer than %d players, so your team rank won't count", g_Config.m_SvMinTeamSize);
+		GameServer()->SendStartWarning(ClientId, aBuf);
+	}
+	if(g_Config.m_SvResetPickups)
+	{
+		pChr->ResetPickups();
+	}
+
+
+
+	// Teleport to the start of the challenge
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(GameServer()->m_apPlayers[i] && GameServer()->GetDDRaceTeam(i) == Team)
+		{
+			CCharacter *pChar = GameServer()->m_apPlayers[i]->GetCharacter();
+			vec2 spawnPoint = vec2(10, 10);
+			Teams().OnCharacterStart(i);
+			pChar->m_LastTimeCp = -1;
+			pChar->m_LastTimeCpBroadcasted = -1;
+			for(float &CurrentTimeCp : pChar->m_aCurrentTimeCp)
+			{
+				CurrentTimeCp = 0.0f;
+			}
+			spawnPoint = GameServer()->m_pController->GetChallengeStartPos();
+			pChar->SetPosition(spawnPoint);
+			pChar->m_Pos = spawnPoint;
+			pChar->m_PrevPos = spawnPoint;
+			pChar->ResetJumps();
+			pChar->UnFreeze();
+			pChar->SetVelocity(vec2(0, 0));
+		}
+	}
 }

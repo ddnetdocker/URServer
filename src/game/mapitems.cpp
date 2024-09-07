@@ -11,6 +11,7 @@ bool IsValidGameTile(int Index)
 		(Index >= TILE_WALLJUMP && Index <= TILE_SOLO_DISABLE) ||
 		(Index >= TILE_REFILL_JUMPS && Index <= TILE_STOPA) ||
 		(Index >= TILE_CP && Index <= TILE_THROUGH_DIR) ||
+		(Index >= TILE_CHALLENGEQUEUE && Index <= TILE_CHALLENGESTART) ||
 		(Index >= TILE_OLDLASER && Index <= TILE_UNLOCK_TEAM) ||
 		(Index >= TILE_NPC_DISABLE && Index <= TILE_NPH_DISABLE) ||
 		(Index >= TILE_TELE_GUN_ENABLE && Index <= TILE_TELE_GUN_DISABLE) ||
@@ -33,6 +34,7 @@ bool IsValidFrontTile(int Index)
 		(Index >= TILE_WALLJUMP && Index <= TILE_SOLO_DISABLE) ||
 		(Index >= TILE_REFILL_JUMPS && Index <= TILE_STOPA) ||
 		(Index >= TILE_CP && Index <= TILE_THROUGH_DIR) ||
+		(Index >= TILE_CHALLENGEQUEUE && Index <= TILE_CHALLENGESTART) ||
 		(Index >= TILE_OLDLASER && Index <= TILE_UNLOCK_TEAM) ||
 		(Index >= TILE_NPC_DISABLE && Index <= TILE_NPH_DISABLE) ||
 		(Index >= TILE_TELE_GUN_ENABLE && Index <= TILE_ALLOW_BLUE_TELE_GUN) ||

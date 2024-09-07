@@ -127,16 +127,6 @@ void CCollision::Init(class CLayers *pLayers)
 			int Type = m_pTele[i].m_Type;
 			if(Number > 0)
 			{
-				if(Type == TILE_CHALLENGEQUEUE)
-				{
-					dbg_msg("collision", "challenge queue %d at (%d, %d)", Number, i % m_Width, i / m_Width);
-					m_ChallengeQueue[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
-				}
-				else if(Type == TILE_CHALLENGESTART)
-				{
-					m_ChallengeStart[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
-				}
-
 				if(Type == TILE_TELEIN)
 				{
 					m_TeleIns[Number - 1].emplace_back(i % m_Width * 32.0f + 16.0f, i / m_Width * 32.0f + 16.0f);
