@@ -24,5 +24,10 @@ public:
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg = true) override;
 
 	void startChallenge(CCharacter *pChr);
+	void checkTeamFail();
+	bool IsTeamFail(int Team);
+	void TeleTeamToCheckpoint(int Team, int TeleTo, vec2 Pos = vec2(-1, -1));
+	void Teleport(CCharacter *pChr, vec2 Pos);
+
 };
 #endif // GAME_SERVER_GAMEMODES_MOD_H

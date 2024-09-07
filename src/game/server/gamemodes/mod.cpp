@@ -9,6 +9,8 @@
 #include <game/server/score.h>
 #include <game/version.h>
 
+#include <climits>
+
 // Exchange this to a string that identifies your game mode.
 // DM, TDM and CTF are reserved for teeworlds original modes.
 // DDraceNetwork and TestDDraceNetwork are used by DDNet.
@@ -181,6 +183,7 @@ void CGameControllerMod::Tick()
 	IGameController::Tick();
 	Teams().ProcessSaveTeam();
 	Teams().Tick();
+	checkTeamFail();
 }
 
 void CGameControllerMod::DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg)
@@ -251,8 +254,6 @@ void CGameControllerMod::startChallenge(CCharacter *pChr)
 		pChr->ResetPickups();
 	}
 
-
-
 	// Teleport to the start of the challenge
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -268,12 +269,119 @@ void CGameControllerMod::startChallenge(CCharacter *pChr)
 				CurrentTimeCp = 0.0f;
 			}
 			spawnPoint = GameServer()->m_pController->GetChallengeStartPos();
-			pChar->SetPosition(spawnPoint);
-			pChar->m_Pos = spawnPoint;
-			pChar->m_PrevPos = spawnPoint;
-			pChar->ResetJumps();
-			pChar->UnFreeze();
-			pChar->SetVelocity(vec2(0, 0));
+
+			Teleport(pChar, spawnPoint);
 		}
 	}
+}
+
+void CGameControllerMod::checkTeamFail()
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(IsTeamFail(i))
+		{
+			int lowest = INT_MAX;
+			for(int x = 0; x < MAX_CLIENTS; x++)
+			{
+				CPlayer *p = GameServer()->m_apPlayers[x];
+				if(p == nullptr)
+					continue;
+				if(GameServer()->GetDDRaceTeam(p->GetCid()) == i)
+				{
+					if(p->GetCharacter()->m_TeleCheckpoint < lowest)
+						lowest = p->GetCharacter()->m_TeleCheckpoint;
+				}
+			}
+			TeleTeamToCheckpoint(i, lowest);
+		}
+	}
+}
+
+bool CGameControllerMod::IsTeamFail(int team)
+{
+	if(team == TEAM_FLOCK)
+	{
+		return false;
+	}
+
+	bool Empty = true;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(GameServer()->m_apPlayers[i] == nullptr || GameServer()->m_apPlayers[i]->GetCharacter() == nullptr)
+		{
+			continue;
+		}
+		if(GameServer()->GetDDRaceTeam(i) != team)
+		{
+			continue;
+		}
+
+		Empty = false;
+
+		float velx = ((float)((int)(GameServer()->m_apPlayers[i]->GetCharacter()->Core()->m_Vel.x * 10))) / 10;
+		float vely = ((float)((int)(GameServer()->m_apPlayers[i]->GetCharacter()->Core()->m_Vel.y * 10))) / 10;
+		bool velx0 = (velx > -0.1 && velx < 0.1);
+		bool vely0 = (vely > -0.1 && vely < 0.1);
+		bool isMoving = !(velx0 && vely0);
+		bool isFreeze = GameServer()->m_apPlayers[i]->GetCharacter()->Core()->m_IsInFreeze;
+		if(!isFreeze)
+		{
+			return false;
+		}
+		else
+		{
+			if(isMoving)
+			{
+				return false;
+			}
+		}
+	}
+	return !Empty;
+}
+
+void CGameControllerMod::TeleTeamToCheckpoint(int Team, int TeleTo, vec2 Pos)
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(GameServer()->GetDDRaceTeam(i) == Team)
+		{
+			if(GameServer()->m_apPlayers[i] == nullptr)
+				continue;
+
+			vec2 TelePos = vec2(10, 10);
+			if(TeleTo == 0)
+			{
+				TelePos = GameServer()->m_pController->GetChallengeStartPos();
+			}
+			else
+			{
+				if(!GameServer()->Collision()->TeleCheckOuts(TeleTo - 1).empty())
+				{
+					CCharacter *pChr = GameServer()->GetPlayerChar(i);
+					if(pChr)
+					{
+						int TeleOut = GameServer()->m_World.m_Core.RandomOr0(GameServer()->Collision()->TeleCheckOuts(TeleTo - 1).size());
+						TelePos = GameServer()->Collision()->TeleCheckOuts(TeleTo - 1)[TeleOut];
+					}
+				}
+			}
+
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetCharacter())
+			{
+				Teleport(GameServer()->m_apPlayers[i]->GetCharacter(), TelePos);
+				GameServer()->m_apPlayers[i]->GetCharacter()->m_FreezeTime = (TeleTo == 0) ? 50 : 100;
+			}
+		}
+	}
+}
+
+void CGameControllerMod::Teleport(CCharacter *pChr, vec2 Pos)
+{
+	pChr->SetPosition(Pos);
+	pChr->m_Pos = Pos;
+	pChr->m_PrevPos = Pos;
+	pChr->ResetJumps();
+	pChr->UnFreeze();
+	pChr->SetVelocity(vec2(0, 0));
 }
