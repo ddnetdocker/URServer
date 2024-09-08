@@ -4040,7 +4040,7 @@ void CGameContext::CreateAllEntities(bool Initial)
 			// Game layer
 			{
 				const int GameIndex = pTiles[Index].m_Index;
-
+				
 				if(GameIndex == TILE_OLDLASER)
 				{
 					g_Config.m_SvOldLaser = 1;

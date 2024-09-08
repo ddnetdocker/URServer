@@ -87,8 +87,6 @@ public:
 	int GetTileFlags(int Index) const;
 	int GetFTileFlags(int Index) const;
 	int IsTeleport(int Index) const;
-	int IsChallengeQueue(int Index) const;
-	int IsChallengeStart(int Index) const;
 	int IsEvilTeleport(int Index) const;
 	bool IsCheckTeleport(int Index) const;
 	bool IsCheckEvilTeleport(int Index) const;

@@ -1944,26 +1944,6 @@ void CCharacter::HandleTiles(int Index)
 		}
 		return;
 	}
-	
-	if(Collision()->IsChallengeQueue(MapIndex))
-	{
-		dbg_msg("challenge", "challenge queue");
-		if(m_Core.m_Super)
-			return;
-		vec2 SpawnPos;
-		if(GameServer()->m_pController->CanSpawn(m_pPlayer->GetTeam(), &SpawnPos, GameServer()->GetDDRaceTeam(GetPlayer()->GetCid())))
-		{
-			m_Core.m_Pos = SpawnPos;
-
-			if(!g_Config.m_SvTeleportHoldHook)
-			{
-				ResetHook();
-			}
-		}
-		return;
-	}
-
-
 }
 
 void CCharacter::HandleTuneLayer()

@@ -657,28 +657,6 @@ int CCollision::IsTeleport(int Index) const
 	return 0;
 }
 
-int CCollision::IsChallengeQueue(int Index) const
-{
-	if(Index < 0 || !m_pTele)
-		return 0;
-
-	if(m_pTele[Index].m_Type == TILE_CHALLENGEQUEUE)
-		return m_pTele[Index].m_Number;
-
-	return 0;
-}
-
-int CCollision::IsChallengeStart(int Index) const
-{
-	if(Index < 0 || !m_pTele)
-		return 0;
-
-	if(m_pTele[Index].m_Type == TILE_CHALLENGESTART)
-		return m_pTele[Index].m_Number;
-
-	return 0;
-}
-
 int CCollision::IsEvilTeleport(int Index) const
 {
 	if(Index < 0)
